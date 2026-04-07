@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Patrick+Hand&display=swap');
+
+:root {
+  /* Colors - Hand-Drawn Single Palette */
+  --bg-color: #fdfbf7;      /* Warm Paper */
+  --fg-color: #2d2d2d;      /* Soft Pencil Black */
+  --muted-color: #e5e0d8;   /* Old Paper / Erased Pencil */
+  --accent-color: #ff4d4d;  /* Red Correction Marker */
+  --secondary-accent: #2d5da1; /* Blue Ballpoint Pen */
+  --shadow-color: #2d2d2d;
+  
+  /* Radii - CRITICAL Wobbly Logic */
+  --wobbly: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --wobbly-md: 4px 10px 4px 12px / 12px 4px 10px 4px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Patrick Hand', cursive;
+  background-color: var(--bg-color);
+  color: var(--fg-color);
+  /* Notebook Dot Pattern */
+  background-image: radial-gradient(var(--muted-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+  line-height: 1.5;
+  font-size: 1.25rem;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: 'Kalam', cursive;
+  font-weight: 700;
+  text-transform: none;
+}
+
+/* Wobbly Utility */
+.sketch-wobbly {
+  border: 3px solid var(--fg-color);
+  border-radius: var(--wobbly);
+}
+
+.sketch-card {
+  background: white;
+  border: 2px solid var(--fg-color);
+  border-radius: var(--wobbly-md);
+  box-shadow: 4px 4px 0px 0px var(--shadow-color);
+  padding: 2rem;
+  transition: all 0.1s ease-in-out;
+  position: relative;
+}
+
+.sketch-card:hover {
+  transform: translate(-1px, -1px) rotate(1deg);
+  box-shadow: 6px 6px 0px 0px var(--shadow-color);
+}
+
+/* TAPE DECORATION */
+.sketch-card-tape::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 80px;
+  height: 30px;
+  background: rgba(180, 180, 180, 0.4);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  z-index: 2;
+}
+
+/* TACK DECORATION */
+.sketch-card-tack::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 15px;
+  height: 15px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  border: 2px solid var(--fg-color);
+  z-index: 2;
+}
+
+.sketch-button {
+  font-family: 'Patrick Hand', cursive;
+  font-weight: bold;
+  font-size: 1.4rem;
+  padding: 0.75rem 1.8rem;
+  background: white;
+  color: var(--fg-color);
+  border: 3px solid var(--fg-color);
+  border-radius: var(--wobbly);
+  box-shadow: 4px 4px 0px 0px var(--shadow-color);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.1s;
+  text-decoration: none;
+}
+
+.sketch-button:hover {
+  background: var(--accent-color);
+  color: white;
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
+}
+
+.sketch-button:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px var(--shadow-color);
+}
+
+.sketch-button.secondary {
+  background: var(--muted-color);
+}
+
+.sketch-button.secondary:hover {
+  background: var(--secondary-accent);
+}
+
+.sketch-input {
+  font-family: 'Patrick Hand', cursive;
+  border: 3px solid var(--fg-color);
+  border-radius: var(--wobbly-md);
+  padding: 0.8rem 1.2rem;
+  font-size: 1.2rem;
+  background: white;
+  width: 100%;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.sketch-input:focus {
+  border-color: var(--secondary-accent);
+  box-shadow: 0 0 0 4px rgba(45, 93, 161, 0.1);
+}
+
+.marker-highlight {
+  background: linear-gradient(180deg, transparent 60%, #fffb8f 0);
+  display: inline;
+}
+
+.correction-mark {
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.logo {
+  font-family: 'Kalam', cursive;
+  font-size: 2.2rem;
+  transform: rotate(-2deg);
+  border: 3px solid var(--fg-color);
+  padding: 4px 16px;
+  border-radius: var(--wobbly);
+  display: inline-block;
+  background: white;
+  box-shadow: 3px 3px 0px var(--shadow-color);
+}
