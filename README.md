@@ -33,15 +33,16 @@
 ## 🏗️ Getting Started
 
 ### **Prerequisites**
-- **Java 21**
+- **Java 21 (Amazon Corretto Recommended)**
 - **Node.js** (v18+)
-- **PostgreSQL** (Running on port `2004` or updated in `application.properties`)
+- **PostgreSQL** (Running on port `2004`)
 
 ### **1. Backend Setup**
 1. Navigate to the root directory.
-2. Ensure you have a database named `SkillSphere` in PostgreSQL.
+2. Ensure you have a database named `SkillSphere` in PostgreSQL (Port `2004`).
 3. Run the application:
    ```bash
+   # Make sure JAVA_HOME points to your JDK 21
    mvn spring-boot:run
    ```
    *The server will start on `http://localhost:8084`.*
@@ -63,9 +64,16 @@
 
 ---
 
-## 📖 API Documentation
+## 📖 API Documentation & Testing
 Once the backend is running, you can explore the interactive API docs at:
 **[http://localhost:8084/swagger-ui/index.html](http://localhost:8084/swagger-ui/index.html)**
+
+### **Postman / Manual Testing Flow:**
+1. **Register**: `POST /api/users` (Sends name, email, password, bio).
+2. **Login**: `POST /api/auth/login` -> **Copy the token**.
+3. **Authorize**: Add `Bearer <your_token>` to the `Authorization` header for all other calls.
+4. **Create Skill**: `POST /api/skills?ownerId=<id>`.
+5. **Explore**: `GET /api/skills/paged` or `GET /api/skills/search?query=...`.
 
 ---
 
@@ -74,6 +82,7 @@ SkillSphere follows the **Hand-Drawn Approach**:
 - **No Straight Lines**: Every border uses irregular `border-radius`.
 - **Authentic Texture**: Subtle paper grain and marker highlights.
 - **Human Touch**: Handwritten typography (*Kalam* & *Patrick Hand*).
+- **Interactive States**: Buttons that shift and flatten on click to simulate physical pressure.
 
 ---
 
