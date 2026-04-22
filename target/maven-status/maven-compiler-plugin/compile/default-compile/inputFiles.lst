@@ -31,5 +31,6 @@
 /Users/garvsurve/Desktop/SkillSphere/src/main/java/com/skillsphere/repository/SkillRequestRepository.java
 /Users/garvsurve/Desktop/SkillSphere/src/main/java/com/skillsphere/security/service/UserDetailsServiceImpl.java
 /Users/garvsurve/Desktop/SkillSphere/src/main/java/com/skillsphere/controller/SkillController.java
+/Users/garvsurve/Desktop/SkillSphere/src/main/java/com/skillsphere/config/DataSeeder.java
 /Users/garvsurve/Desktop/SkillSphere/src/main/java/com/skillsphere/dto/response/JwtResponse.java
 /Users/garvsurve/Desktop/SkillSphere/src/main/java/com/skillsphere/dto/request/SessionScheduleRequest.java

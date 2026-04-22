@@ -13,4 +13,5 @@ public class UserResponse {
     private String bio;
     private String profilePicture;
     private LocalDateTime createdAt;
+    private java.util.List<SkillResponse> skillsOffered;
 }

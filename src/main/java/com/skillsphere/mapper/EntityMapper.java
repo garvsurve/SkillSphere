@@ -20,6 +20,9 @@ public class EntityMapper {
                 .bio(user.getBio())
                 .profilePicture(user.getProfilePicture())
                 .createdAt(user.getCreatedAt())
+                .skillsOffered(user.getSkillsOffered() != null ? 
+                    user.getSkillsOffered().stream().map(this::toSkillResponse).collect(java.util.stream.Collectors.toList()) 
+                    : new java.util.ArrayList<>())
                 .build();
     }
 

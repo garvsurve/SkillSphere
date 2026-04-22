@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8084/api',
+  baseURL: 'http://localhost:8085/api',
 });
 
 // Interceptor to add JWT token to every request
@@ -24,4 +24,9 @@ export const skillsApi = {
   getAll: (page = 0, size = 10) => api.get(`/skills/paged?page=${page}&size=${size}`),
   search: (query) => api.get(`/skills/search?query=${query}`),
   create: (ownerId, skillData) => api.post(`/skills?ownerId=${ownerId}`, skillData),
+};
+
+export const usersApi = {
+  getAll: () => api.get('/users'),
+  getById: (id) => api.get(`/users/${id}`),
 };

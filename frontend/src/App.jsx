@@ -7,7 +7,7 @@ import {
   useNavigate 
 } from 'react-router-dom';
 import { Search, LogOut, Sparkles, BookOpen, Map, ArrowRight, UserPlus, Fingerprint } from 'lucide-react';
-import api, { authApi, skillsApi } from './api';
+import api, { authApi, skillsApi, usersApi } from './api';
 
 // --- ATOMS / REUSABLE SKETCH COMPONENTS ---
 
@@ -101,27 +101,61 @@ const LandingPage = () => (
   </div>
 );
 
-const DiscoverPage = () => {
-  const [skills, setSkills] = useState([]);
-  const [query, setQuery] = useState('');
+const ProfileModal = ({ user, onClose }) => {
+  if (!user) return null;
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+      <SketchCard decoration="tape" style={{ width: '90%', maxWidth: '500px', backgroundColor: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '2rem', margin: 0 }}>{user.name}'s Profile</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+        </div>
+        <p style={{ fontStyle: 'italic', color: '#666', marginBottom: '1.5rem' }}>{user.bio || 'No bio provided.'}</p>
+        
+        <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Skills Offered:</h3>
+        <ul style={{ listStyleType: 'none', padding: 0, marginBottom: '2rem' }}>
+          {user.skillsOffered && user.skillsOffered.length > 0 ? user.skillsOffered.map(skill => (
+            <li key={skill.id} style={{ marginBottom: '0.5rem', padding: '0.5rem', border: '1px dashed #ccc' }}>
+              <strong>{skill.title}</strong> - {skill.category}
+            </li>
+          )) : <li>No skills offered yet.</li>}
+        </ul>
+        
+        <SketchButton primary style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
+          <BookOpen size={20} /> Contact {user.name}
+        </SketchButton>
+      </SketchCard>
+    </div>
+  );
+};
 
-  const fetchSkills = async () => {
+const DiscoverPage = () => {
+  const [users, setUsers] = useState([]);
+  const [query, setQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const fetchUsers = async () => {
     try {
-      const res = query 
-        ? await skillsApi.search(query) 
-        : await skillsApi.getAll();
-      setSkills(res.data.content || res.data);
+      const res = await usersApi.getAll();
+      setUsers(res.data);
     } catch (err) { console.error(err); }
   };
 
-  useEffect(() => { fetchSkills(); }, [query]);
+  useEffect(() => { fetchUsers(); }, []);
+
+  const filteredUsers = users.filter(user => {
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return user.name.toLowerCase().includes(q) || 
+           (user.skillsOffered && user.skillsOffered.some(s => s.title.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)));
+  });
 
   return (
     <div className="container">
       <div style={{ position: 'relative', marginBottom: '4rem', transform: 'rotate(0.5deg)' }}>
         <input 
           className="sketch-input" 
-          placeholder="What do you want to learn today?" 
+          placeholder="Search by name or skill..." 
           value={query}
           onChange={e => setQuery(e.target.value)}
           style={{ paddingLeft: '3.5rem', fontSize: '1.5rem', height: '60px' }}
@@ -130,22 +164,34 @@ const DiscoverPage = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '3rem' }}>
-        {skills.map((skill, index) => (
+        {filteredUsers.map((user, index) => (
           <SketchCard 
-            key={skill.id} 
+            key={user.id} 
             decoration={index % 2 === 0 ? "tape" : "tack"}
-            style={{ transform: `rotate(${index % 2 === 0 ? -1 : 1}deg)` }}
+            style={{ transform: `rotate(${index % 2 === 0 ? -1 : 1}deg)`, cursor: 'pointer' }}
           >
-            <span className="font-heading" style={{ color: '#ff4d4d', letterSpacing: '1px' }}>{skill.category}</span>
-            <h3 style={{ fontSize: '1.8rem', marginTop: '0.5rem' }}>{skill.title}</h3>
-            <p style={{ color: '#555', margin: '1rem 0 2rem', minHeight: '3em' }}>{skill.description}</p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px dashed #ccc', paddingTop: '1rem' }}>
-              <span style={{ fontSize: '1.1rem' }}>By <span className="marker-highlight">{skill.ownerName}</span></span>
-              <SketchButton style={{ padding: '0.3rem 1rem' }}>Swap</SketchButton>
+            <div onClick={() => setSelectedUser(user)}>
+              <h3 style={{ fontSize: '1.8rem', marginTop: '0.5rem', color: '#2d2d2d' }}>{user.name}</h3>
+              <p style={{ color: '#555', margin: '1rem 0 1rem', minHeight: '3em' }}>{user.bio || 'A mysterious member...'}</p>
+              <div style={{ borderTop: '2px dashed #ccc', paddingTop: '1rem' }}>
+                <strong style={{ display: 'block', marginBottom: '0.5rem' }}>Skills:</strong>
+                {user.skillsOffered && user.skillsOffered.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {user.skillsOffered.map(skill => (
+                      <span key={skill.id} style={{ background: '#f0f0f0', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.9rem' }}>
+                        {skill.title}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span style={{ fontStyle: 'italic', color: '#999' }}>No skills listed</span>
+                )}
+              </div>
             </div>
           </SketchCard>
         ))}
       </div>
+      {selectedUser && <ProfileModal user={selectedUser} onClose={() => setSelectedUser(null)} />}
     </div>
   );
 };
