@@ -1,32 +1,38 @@
 # SkillSphere 🎨🤝 
 
-**SkillSphere** is a peer-to-peer skill exchange platform designed for an organic, human-centric experience. It rejects the corporate "straight-line" aesthetic in favor of a unique **Hand-Drawn Design System**, emphasizing that learning is a creative, shared human journey.
+**SkillSphere** is a peer-to-peer developer community built on the idea that technology is fundamentally a human, creative endeavor. It rejects the corporate "straight-line" aesthetic in favor of a unique **Hand-Drawn Design System**, emphasizing that sharing skills, finding collaborators, and learning is an organic, shared journey.
 
 ---
 
-## 🚀 Features
+## 🚀 Key Features
 
-### **Backend (Spring Boot)**
-- **Secure Auth**: JWT-based authentication with BCrypt password hashing.
-- **Skill Management**: Users can list skills they can teach and discover skills from others.
-- **Request Flow**: A full lifecycle from `PENDING` → `ACCEPTED` → `SCHEDULED` → `COMPLETED`.
-- **Session Scheduling**: Mentors can set meeting links and times for accepted requests.
-- **Pagination & Search**: Efficient discovery with keyword search and paged responses.
-- **API Docs**: Fully documented with Swagger/OpenAPI.
+### **1. The Notebook Feed**
+- A dynamic feed where developers share updates, ask for help, or present open-source projects.
+- Posts are tagged with rich contextual badges (e.g. `❓ #AskForHelp`, `🚀 #ShareProject`).
+- Engage via "Appreciate", "Discuss" (threaded comments), or directly "Request Session".
 
-### **Frontend (React)**
-- **Wobbly UI**: Totally custom CSS design system where nothing is perfectly straight.
-- **Notebook Aesthetic**: Grid-dot paper background with warm paper tones.
-- **Interactive Personality**: Buttons that "press flat", taped-on cards, and thumbtack decorations.
-- **Real-time Search**: Instant filtering of the skill catalog.
+### **2. Intent-Based Discovery**
+- The Discover page is the main landing area, prioritizing *why* people are here.
+- Users can toggle their current intents: **Open to Work, Collaborating, Learning, Need Help, Projects**.
+- Easily filter developers based on their active intents and tech stack.
+
+### **3. Follow & Network**
+- Build your developer circle by following others.
+- The Feed page dynamically filters to show posts specifically from your curated network.
+- Dedicated section showcasing the active connections you follow.
+
+### **4. Real-time Messaging & Sessions**
+- Request 1-on-1 sessions directly from a post.
+- A fully functional Dashboard to track Incoming/Sent requests.
+- Integrated ChatBox for live messaging once a session is accepted.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Java 21, Spring Boot 3.2, Spring Data JPA, Spring Security, JWT (JJWT), PostgreSQL.
-- **Frontend**: React 18, Vite, Vanilla CSS, Lucide Icons, Axios.
-- **API Documentation**: SpringDoc OpenAPI (Swagger UI).
+- **Backend**: Java 21, Spring Boot 3.2, Spring Data JPA, Spring Security, JWT, PostgreSQL.
+- **Frontend**: React 18, Vite, Vanilla CSS, Lucide Icons.
+- **Design Language**: Custom CSS (No standard frameworks, everything is hand-drawn and sketchy).
 
 ---
 
@@ -45,7 +51,7 @@
    # Make sure JAVA_HOME points to your JDK 21
    mvn spring-boot:run
    ```
-   *The server will start on `http://localhost:8084`.*
+   *The server will start on `http://localhost:8085`.*
 
 ### **2. Frontend Setup**
 1. Navigate to the `frontend` folder:
@@ -64,25 +70,27 @@
 
 ---
 
-## 📖 API Documentation & Testing
-Once the backend is running, you can explore the interactive API docs at:
-**[http://localhost:8084/swagger-ui/index.html](http://localhost:8084/swagger-ui/index.html)**
+## 📖 API Architecture
 
-### **Postman / Manual Testing Flow:**
-1. **Register**: `POST /api/users` (Sends name, email, password, bio).
-2. **Login**: `POST /api/auth/login` -> **Copy the token**.
-3. **Authorize**: Add `Bearer <your_token>` to the `Authorization` header for all other calls.
-4. **Create Skill**: `POST /api/skills?ownerId=<id>`.
-5. **Explore**: `GET /api/skills/paged` or `GET /api/skills/search?query=...`.
+SkillSphere utilizes a secure, JWT-authenticated REST API. 
+
+### **Core Endpoints:**
+- **Auth**: `POST /api/auth/login`, `POST /api/auth/register`
+- **Users**: `GET /api/users` (Discover/Following), `POST /api/users/{id}/follow`
+- **Posts**: `GET /api/posts/feed`, `POST /api/posts`, `POST /api/posts/{id}/react`
+- **Sessions**: `POST /api/session-requests`, `PUT /api/session-requests/{id}/accept`
+
+*To test manually via Postman, login to receive a Bearer token and include it in the `Authorization` header for subsequent requests.*
 
 ---
 
 ## 🎨 Design Philosophy
-SkillSphere follows the **Hand-Drawn Approach**:
-- **No Straight Lines**: Every border uses irregular `border-radius`.
-- **Authentic Texture**: Subtle paper grain and marker highlights.
+
+SkillSphere's UI is entirely custom and deeply committed to the **Hand-Drawn Approach**:
+- **No Straight Lines**: Every border uses irregular `border-radius` (e.g. `border-radius: 255px 15px 225px 15px/15px 225px 15px 255px`).
+- **Authentic Texture**: Subtle grid paper backgrounds with masking tape and paper clip decorations.
 - **Human Touch**: Handwritten typography (*Kalam* & *Patrick Hand*).
-- **Interactive States**: Buttons that shift and flatten on click to simulate physical pressure.
+- **Tactile Interaction**: Buttons physically compress and lose their shadow drop when clicked, simulating real pressure.
 
 ---
 

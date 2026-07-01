@@ -2,7 +2,9 @@ package com.skillsphere.controller;
 
 import com.skillsphere.dto.request.LoginRequest;
 import com.skillsphere.dto.response.JwtResponse;
+import com.skillsphere.entity.User;
 import com.skillsphere.security.jwt.JwtUtils;
+import com.skillsphere.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+    private final UserService userService;
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -29,9 +32,24 @@ public class AuthController {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
-        
+
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        return ResponseEntity.ok(new JwtResponse(jwt, "Bearer", userDetails.getUsername()));
+        // Enrich response with full user data so frontend doesn't need extra call
+        User user = userService.getUserByEmail(userDetails.getUsername());
+
+        return ResponseEntity.ok(new JwtResponse(
+                jwt,
+                "Bearer",
+                user.getEmail(),
+                user.getId(),
+                user.getName(),
+                user.getAvatarId(),
+                user.getBio(),
+                user.getExperience(),
+                user.getCompany(),
+                user.getTechStack(),
+                user.getIntents()
+        ));
     }
 }

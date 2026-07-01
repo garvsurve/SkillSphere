@@ -9,11 +9,11 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents a platform user who can act as both mentor and learner.
- * One User → Many Skills (skills they can teach)
- * One User → Many SkillRequests (requests they made as a learner)
  */
 @Entity
 @Table(name = "users")  // 'user' is a reserved word in PostgreSQL — always use 'users'
@@ -39,32 +39,54 @@ public class User {
 
     @NotBlank
     @Column(nullable = false)
-    private String password; // Plain text for Phase 1 — hashed with BCrypt in Phase 3
+    private String password; // Hashed with BCrypt
 
     private String bio;
 
     private String profilePicture;
 
-    /**
-     * Skills this user can TEACH (they own these skills).
-     * CascadeType.ALL: if user is deleted, their skills are also deleted.
-     * orphanRemoval: if a skill is removed from this list, it's deleted from DB.
-     */
-    @JsonIgnore
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Skill> skillsOffered = new ArrayList<>();
+    /** Avatar ID referencing a preloaded image, e.g. "avatar1" */
+    private String avatarId;
+
+    /** Experience level e.g. "Fresher", "1 year", "3+ years" */
+    private String experience;
+
+    /** Company or institute name */
+    private String company;
 
     /**
-     * Requests this user made as a LEARNER (not as a mentor).
+     * Tech stack / domains the user works with.
+     * Stored UPPERCASE in DB. Managed via separate join table.
      */
-    @JsonIgnore
-    @OneToMany(mappedBy = "learner", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_tech_stack", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "tech")
     @Builder.Default
-    private List<SkillRequest> requestsMade = new ArrayList<>();
+    private List<String> techStack = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_intents", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "intent")
+    @Builder.Default
+    private List<String> intents = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_following",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "following_id")
+    )
+    @JsonIgnore
+    @Builder.Default
+    private Set<User> following = new HashSet<>();
+
+    @ManyToMany(mappedBy = "following", fetch = FetchType.EAGER)
+    @JsonIgnore
+    @Builder.Default
+    private Set<User> followers = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

@@ -8,10 +8,22 @@
   --accent-color: #ff4d4d;  /* Red Correction Marker */
   --secondary-accent: #2d5da1; /* Blue Ballpoint Pen */
   --shadow-color: #2d2d2d;
+  --card-bg: white;
   
   /* Radii - CRITICAL Wobbly Logic */
   --wobbly: 255px 15px 225px 15px / 15px 225px 15px 255px;
   --wobbly-md: 4px 10px 4px 12px / 12px 4px 10px 4px;
+}
+
+[data-theme="dark"] {
+  --bg-color: #121620;        /* Deep slate/navy blackboard */
+  --fg-color: #e0e6ed;        /* Soft chalk white */
+  --muted-color: #1e293b;     /* Dark grid lines / Faded chalk */
+  --accent-color: #fca5a5;    /* Pastel chalk red */
+  --secondary-accent: #93c5fd;/* Pastel chalk blue */
+  --shadow-color: #020617;    /* Very dark navy shadow */
+  --card-bg: #1e293b;         /* Slightly lighter chalkboard panel */
+  --text-muted: #94a3b8;      /* Faded chalk text */
 }
 
 * {
@@ -45,7 +57,7 @@ h1, h2, h3, h4, .font-heading {
 }
 
 .sketch-card {
-  background: white;
+  background: var(--card-bg);
   border: 2px solid var(--fg-color);
   border-radius: var(--wobbly-md);
   box-shadow: 4px 4px 0px 0px var(--shadow-color);
@@ -68,12 +80,13 @@ h1, h2, h3, h4, .font-heading {
   transform: translateX(-50%) rotate(-2deg);
   width: 80px;
   height: 30px;
-  background: rgba(180, 180, 180, 0.4);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  background: var(--muted-color);
+  opacity: 0.8;
+  border: 1px solid var(--fg-color);
+  box-shadow: 0 1px 2px var(--shadow-color);
   z-index: 2;
 }
 
-/* TACK DECORATION */
 .sketch-card-tack::before {
   content: '';
   position: absolute;
@@ -88,12 +101,28 @@ h1, h2, h3, h4, .font-heading {
   z-index: 2;
 }
 
+/* CLIP DECORATION */
+.sketch-card-clip::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  left: 20px;
+  width: 12px;
+  height: 40px;
+  border: 3px solid var(--fg-color);
+  border-radius: 10px;
+  background: transparent;
+  transform: rotate(15deg);
+  z-index: 2;
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
+}
+
 .sketch-button {
   font-family: 'Patrick Hand', cursive;
   font-weight: bold;
   font-size: 1.4rem;
   padding: 0.75rem 1.8rem;
-  background: white;
+  background: var(--card-bg);
   color: var(--fg-color);
   border: 3px solid var(--fg-color);
   border-radius: var(--wobbly);
@@ -132,7 +161,8 @@ h1, h2, h3, h4, .font-heading {
   border-radius: var(--wobbly-md);
   padding: 0.8rem 1.2rem;
   font-size: 1.2rem;
-  background: white;
+  background: var(--card-bg);
+  color: var(--fg-color);
   width: 100%;
   outline: none;
   transition: all 0.2s;
@@ -144,7 +174,8 @@ h1, h2, h3, h4, .font-heading {
 }
 
 .marker-highlight {
-  background: linear-gradient(180deg, transparent 60%, #fffb8f 0);
+  background: linear-gradient(180deg, transparent 60%, var(--accent-color) 0);
+  opacity: 0.8;
   display: inline;
 }
 
@@ -176,6 +207,7 @@ h1, h2, h3, h4, .font-heading {
   padding: 4px 16px;
   border-radius: var(--wobbly);
   display: inline-block;
-  background: white;
+  background: var(--card-bg);
   box-shadow: 3px 3px 0px var(--shadow-color);
+  color: var(--fg-color);
 }

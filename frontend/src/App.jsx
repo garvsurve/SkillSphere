@@ -4,50 +4,50 @@ import {
   Routes, 
   Route, 
   Link, 
-  useNavigate 
+  useNavigate,
+  Navigate,
+  useLocation
 } from 'react-router-dom';
-import { Search, LogOut, Sparkles, BookOpen, Map, ArrowRight, UserPlus, Fingerprint } from 'lucide-react';
-import api, { authApi, skillsApi, usersApi } from './api';
+import { Search, LogOut, ArrowRight, Fingerprint, Home, LayoutDashboard, Sun, Moon } from 'lucide-react';
+import api, { authApi, usersApi, sessionRequestsApi } from './api';
+import OnboardingPage from './pages/OnboardingPage';
+import FeedPage from './pages/FeedPage';
+import DashboardPage from './pages/DashboardPage';
+import AvatarPicker from './components/AvatarPicker';
+import TagInput from './components/TagInput';
 
-// --- ATOMS / REUSABLE SKETCH COMPONENTS ---
-
-const SketchButton = ({ children, primary = false, secondary = false, onClick, type = "button", style }) => {
-  let className = "sketch-button";
-  if (primary) className += " primary";
-  if (secondary) className += " secondary";
-  
-  return (
-    <button className={className} onClick={onClick} type={type} style={style}>
-      {children}
-    </button>
-  );
-};
-
-const SketchCard = ({ children, decoration = null, style, className = "" }) => {
-  let decorClass = "";
-  if (decoration === "tape") decorClass = "sketch-card-tape";
-  if (decoration === "tack") decorClass = "sketch-card-tack";
-  
-  return (
-    <div className={`sketch-card ${decorClass} ${className}`} style={style}>
-      {children}
-    </div>
-  );
-};
+import { SketchButton, SketchCard } from './components/Sketch';
+import DiscoverPage from './pages/DiscoverPage';
 
 // --- LAYOUT COMPONENTS ---
 
-const Navbar = ({ user, onLogout }) => (
-  <nav className="nav">
-    <Link to="/" className="logo" style={{ textDecoration: 'none', color: 'inherit' }}>
-      SkillSphere<span className="correction-mark">!</span>
-    </Link>
-    <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'center' }}>
-      <Link to="/discover" className="font-heading" style={{ textDecoration: 'none', color: 'inherit' }}>discover</Link>
-      {user ? (
-        <>
-          <Link to="/dashboard" className="font-heading" style={{ textDecoration: 'none', color: 'inherit' }}>my stuff</Link>
-          <SketchButton onClick={onLogout} style={{ padding: '0.4rem 1rem', fontSize: '1.1rem' }}>
+const Navbar = ({ user, onLogout, isDarkMode, toggleTheme }) => {
+  const location = useLocation();
+  const getLinkStyle = (path) => ({
+    textDecoration: 'none',
+    color: 'inherit',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    borderBottom: location.pathname === path ? '3px solid #ff4d4d' : 'none',
+    paddingBottom: '0.2rem'
+  });
+
+  return (
+    <nav className="nav">
+      <Link to="/" className="logo" style={{ textDecoration: 'none', color: 'inherit' }}>
+        SkillSphere<span className="correction-mark">!</span>
+      </Link>
+      <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'center' }}>
+        <button onClick={toggleTheme} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-color)' }}>
+          {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
+        </button>
+        <Link to="/discover" className="font-heading" style={{ ...getLinkStyle('/discover') }}><Search size={18}/> Discover</Link>
+        {user ? (
+          <>
+            <Link to="/feed" className="font-heading" style={{ ...getLinkStyle('/feed') }}><Home size={18}/> Feed</Link>
+            <Link to="/dashboard" className="font-heading" style={{ ...getLinkStyle('/dashboard') }}><LayoutDashboard size={18}/> Dashboard</Link>
+            <SketchButton onClick={onLogout} style={{ padding: '0.4rem 1rem', fontSize: '1.1rem' }}>
             <LogOut size={16} /> bye
           </SketchButton>
         </>
@@ -55,152 +55,24 @@ const Navbar = ({ user, onLogout }) => (
         <Link to="/login" className="sketch-button" style={{ textDecoration: 'none', borderBottom: '4px solid #ff4d4d' }}>
           get in <ArrowRight size={18} />
         </Link>
-      )}
-    </div>
-  </nav>
-);
-
+        )}
+      </div>
+    </nav>
+  );
+};
 // --- PAGES ---
-
-const LandingPage = () => (
-  <div className="container" style={{ textAlign: 'center', paddingTop: '4rem' }}>
-    <h1 style={{ fontSize: '4.5rem', lineHeight: '1', transform: 'rotate(-1deg)' }}>
-      Swap talents <br/> 
-      <span className="marker-highlight">no money involved</span>
-      <span className="correction-mark">!</span>
-    </h1>
-    
-    <p style={{ fontSize: '1.6rem', maxWidth: '650px', margin: '2rem auto 3rem' }}>
-      SkillSphere is a human-powered exchange. Learn anything from coding to cooking, taught by real people in your neighborhood.
-    </p>
-
-    <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', marginBottom: '6rem' }}>
-      <Link to="/login" className="sketch-button" style={{ background: '#2d2d2d', color: 'white', fontSize: '1.8rem' }}>
-        Start Swap <Sparkles size={24} />
-      </Link>
-      <Link to="/discover" className="sketch-button" style={{ fontSize: '1.8rem' }}>
-        Explore <BookOpen size={24} />
-      </Link>
-    </div>
-
-    {/* STATS SECTION */}
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '3rem' }}>
-      <SketchCard decoration="tack" style={{ transform: 'rotate(-2deg)' }}>
-        <h2 style={{ fontSize: '3.5rem' }}>500<span className="correction-mark">k</span>+</h2>
-        <p>Active Learners</p>
-      </SketchCard>
-      <SketchCard decoration="tape" style={{ transform: 'rotate(1deg)' }}>
-        <h2 style={{ fontSize: '3.5rem' }}>99<span className="correction-mark">%</span></h2>
-        <p>Success Rate</p>
-      </SketchCard>
-      <SketchCard decoration="tack" style={{ transform: 'rotate(-1deg)' }}>
-        <h2 style={{ fontSize: '3.5rem' }}>0<span className="correction-mark">$</span></h2>
-        <p>Cost Always</p>
-      </SketchCard>
-    </div>
-  </div>
-);
-
-const ProfileModal = ({ user, onClose }) => {
-  if (!user) return null;
-  return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-      <SketchCard decoration="tape" style={{ width: '90%', maxWidth: '500px', backgroundColor: 'white' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ fontSize: '2rem', margin: 0 }}>{user.name}'s Profile</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
-        </div>
-        <p style={{ fontStyle: 'italic', color: '#666', marginBottom: '1.5rem' }}>{user.bio || 'No bio provided.'}</p>
-        
-        <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Skills Offered:</h3>
-        <ul style={{ listStyleType: 'none', padding: 0, marginBottom: '2rem' }}>
-          {user.skillsOffered && user.skillsOffered.length > 0 ? user.skillsOffered.map(skill => (
-            <li key={skill.id} style={{ marginBottom: '0.5rem', padding: '0.5rem', border: '1px dashed #ccc' }}>
-              <strong>{skill.title}</strong> - {skill.category}
-            </li>
-          )) : <li>No skills offered yet.</li>}
-        </ul>
-        
-        <SketchButton primary style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-          <BookOpen size={20} /> Contact {user.name}
-        </SketchButton>
-      </SketchCard>
-    </div>
-  );
-};
-
-const DiscoverPage = () => {
-  const [users, setUsers] = useState([]);
-  const [query, setQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await usersApi.getAll();
-      setUsers(res.data);
-    } catch (err) { console.error(err); }
-  };
-
-  useEffect(() => { fetchUsers(); }, []);
-
-  const filteredUsers = users.filter(user => {
-    if (!query) return true;
-    const q = query.toLowerCase();
-    return user.name.toLowerCase().includes(q) || 
-           (user.skillsOffered && user.skillsOffered.some(s => s.title.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)));
-  });
-
-  return (
-    <div className="container">
-      <div style={{ position: 'relative', marginBottom: '4rem', transform: 'rotate(0.5deg)' }}>
-        <input 
-          className="sketch-input" 
-          placeholder="Search by name or skill..." 
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          style={{ paddingLeft: '3.5rem', fontSize: '1.5rem', height: '60px' }}
-        />
-        <Search style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: '#2d2d2d' }} />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '3rem' }}>
-        {filteredUsers.map((user, index) => (
-          <SketchCard 
-            key={user.id} 
-            decoration={index % 2 === 0 ? "tape" : "tack"}
-            style={{ transform: `rotate(${index % 2 === 0 ? -1 : 1}deg)`, cursor: 'pointer' }}
-          >
-            <div onClick={() => setSelectedUser(user)}>
-              <h3 style={{ fontSize: '1.8rem', marginTop: '0.5rem', color: '#2d2d2d' }}>{user.name}</h3>
-              <p style={{ color: '#555', margin: '1rem 0 1rem', minHeight: '3em' }}>{user.bio || 'A mysterious member...'}</p>
-              <div style={{ borderTop: '2px dashed #ccc', paddingTop: '1rem' }}>
-                <strong style={{ display: 'block', marginBottom: '0.5rem' }}>Skills:</strong>
-                {user.skillsOffered && user.skillsOffered.length > 0 ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {user.skillsOffered.map(skill => (
-                      <span key={skill.id} style={{ background: '#f0f0f0', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.9rem' }}>
-                        {skill.title}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span style={{ fontStyle: 'italic', color: '#999' }}>No skills listed</span>
-                )}
-              </div>
-            </div>
-          </SketchCard>
-        ))}
-      </div>
-      {selectedUser && <ProfileModal user={selectedUser} onClose={() => setSelectedUser(null)} />}
-    </div>
-  );
-};
-
 const LoginPage = ({ setUser }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
+  // Extra signup fields
+  const [bio, setBio] = useState('');
+  const [experience, setExperience] = useState('Fresher');
+  const [company, setCompany] = useState('');
+  const [avatarId, setAvatarId] = useState('avatar1');
+  const [techStack, setTechStack] = useState([]);
+  
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -211,50 +83,81 @@ const LoginPage = ({ setUser }) => {
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user', JSON.stringify(res.data));
         setUser(res.data);
+        if (res.data.techStack && res.data.techStack.length > 0) {
+          navigate('/feed');
+        } else {
+          navigate('/onboarding');
+        }
       } else {
-        await authApi.signup({ name, email, password });
+        await authApi.signup({ name, email, password, bio, experience, company, avatarId, techStack });
         alert('Cool! Now login.');
         setIsLogin(true);
-        return;
       }
-      navigate('/discover');
     } catch (err) {
       alert('Oops: ' + (err.response?.data?.message || 'Bad luck!'));
     }
   };
 
   return (
-    <div className="container" style={{ maxWidth: '450px', marginTop: '4rem' }}>
+    <div className="container" style={{ maxWidth: '600px', marginTop: '4rem', paddingBottom: '4rem' }}>
       <SketchCard decoration="tack" style={{ transform: 'rotate(1deg)' }}>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem' }}>
           {isLogin ? 'Hello again' : 'First time?'} <span className="correction-mark">?</span>
         </h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {!isLogin && (
-            <input 
-              className="sketch-input" 
-              placeholder="What's your name?" 
-              value={name} 
-              onChange={e => setName(e.target.value)} 
-              required
-            />
+            <>
+              <AvatarPicker selectedAvatarId={avatarId} onSelect={setAvatarId} />
+              
+              <div>
+                <label style={{ fontWeight: 'bold' }}>Name *</label>
+                <input className="sketch-input" placeholder="What's your name?" value={name} onChange={e => setName(e.target.value)} required />
+              </div>
+            </>
           )}
-          <input 
-            className="sketch-input" 
-            placeholder="Email address" 
-            value={email} 
-            onChange={e => setEmail(e.target.value)} 
-            required
-          />
-          <input 
-            className="sketch-input" 
-            type="password" 
-            placeholder="Password" 
-            value={password} 
-            onChange={e => setPassword(e.target.value)} 
-            required
-          />
-          <SketchButton type="submit" style={{ width: '100%', background: '#2d2d2d', color: 'white', justifyContent: 'center' }}>
+
+          <div>
+            <label style={{ fontWeight: 'bold' }}>Email *</label>
+            <input className="sketch-input" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required />
+          </div>
+
+          <div>
+            <label style={{ fontWeight: 'bold' }}>Password *</label>
+            <input className="sketch-input" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
+          </div>
+
+          {!isLogin && (
+            <>
+              <div>
+                <label style={{ fontWeight: 'bold' }}>Bio</label>
+                <textarea className="sketch-input" placeholder="Tell us a bit about yourself..." value={bio} onChange={e => setBio(e.target.value)} rows={3} />
+              </div>
+
+              <div>
+                <label style={{ fontWeight: 'bold' }}>Experience</label>
+                <select className="sketch-input" value={experience} onChange={e => setExperience(e.target.value)}>
+                  <option value="Fresher">Fresher</option>
+                  <option value="1 year">1 year</option>
+                  <option value="2 years">2 years</option>
+                  <option value="3+ years">3+ years</option>
+                  <option value="5+ years">5+ years</option>
+                  <option value="10+ years">10+ years</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontWeight: 'bold' }}>Company / Institute</label>
+                <input className="sketch-input" placeholder="Where do you work or study?" value={company} onChange={e => setCompany(e.target.value)} />
+              </div>
+
+              <div>
+                <label style={{ fontWeight: 'bold' }}>Tech Stack / Domains</label>
+                <TagInput tags={techStack} setTags={setTechStack} placeholder="e.g. REACT, NODEJS" />
+              </div>
+            </>
+          )}
+
+          <SketchButton type="submit" style={{ width: '100%', background: 'var(--fg-color)', color: 'var(--bg-color)', justifyContent: 'center' }}>
             {isLogin ? 'Let\'s go' : 'Create account'} <Fingerprint size={20} />
           </SketchButton>
         </form>
@@ -271,11 +174,21 @@ const LoginPage = ({ setUser }) => {
 
 const App = () => {
   const [user, setUser] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) setUser(JSON.parse(savedUser));
   }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(prev => !prev);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -284,12 +197,14 @@ const App = () => {
 
   return (
     <Router>
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar user={user} onLogout={handleLogout} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage setUser={setUser} />} />
+        <Route path="/" element={<DiscoverPage />} />
+        <Route path="/login" element={user ? <Navigate to="/feed" /> : <LoginPage setUser={setUser} />} />
         <Route path="/discover" element={<DiscoverPage />} />
-        <Route path="/dashboard" element={<div className="container"><SketchCard decoration="tape"><h2>Dashboard is being sketched...</h2><p>Come back later!</p></SketchCard></div>} />
+        <Route path="/onboarding" element={user ? <OnboardingPage user={user} setUser={setUser} /> : <Navigate to="/login" />} />
+        <Route path="/feed" element={user ? <FeedPage user={user} /> : <Navigate to="/login" />} />
+        <Route path="/dashboard" element={user ? <DashboardPage user={user} setUser={setUser} /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );

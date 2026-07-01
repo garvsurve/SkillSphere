@@ -1,12 +1,11 @@
 package com.skillsphere.mapper;
 
-import com.skillsphere.dto.response.SkillRequestResponse;
-import com.skillsphere.dto.response.SkillResponse;
-import com.skillsphere.dto.response.UserResponse;
-import com.skillsphere.entity.Skill;
-import com.skillsphere.entity.SkillRequest;
-import com.skillsphere.entity.User;
+import com.skillsphere.dto.response.*;
+import com.skillsphere.entity.*;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Component
 public class EntityMapper {
@@ -19,39 +18,28 @@ public class EntityMapper {
                 .email(user.getEmail())
                 .bio(user.getBio())
                 .profilePicture(user.getProfilePicture())
+                .avatarId(user.getAvatarId())
+                .experience(user.getExperience())
+                .company(user.getCompany())
+                .techStack(user.getTechStack() != null ? user.getTechStack() : new ArrayList<>())
+                .intents(user.getIntents() != null ? user.getIntents() : new ArrayList<>())
                 .createdAt(user.getCreatedAt())
-                .skillsOffered(user.getSkillsOffered() != null ? 
-                    user.getSkillsOffered().stream().map(this::toSkillResponse).collect(java.util.stream.Collectors.toList()) 
-                    : new java.util.ArrayList<>())
+                .followerCount(user.getFollowers() != null ? user.getFollowers().size() : 0)
+                .followingIds(user.getFollowing() != null ? user.getFollowing().stream().map(User::getId).collect(Collectors.toList()) : new ArrayList<>())
                 .build();
     }
 
-    public SkillResponse toSkillResponse(Skill skill) {
-        if (skill == null) return null;
-        return SkillResponse.builder()
-                .id(skill.getId())
-                .title(skill.getTitle())
-                .description(skill.getDescription())
-                .category(skill.getCategory())
-                .ownerId(skill.getOwner().getId())
-                .ownerName(skill.getOwner().getName())
-                .createdAt(skill.getCreatedAt())
-                .build();
-    }
 
-    public SkillRequestResponse toSkillRequestResponse(SkillRequest request) {
-        if (request == null) return null;
-        return SkillRequestResponse.builder()
-                .id(request.getId())
-                .skillId(request.getSkill().getId())
-                .skillTitle(request.getSkill().getTitle())
-                .learnerId(request.getLearner().getId())
-                .learnerName(request.getLearner().getName())
-                .status(request.getStatus())
-                .message(request.getMessage())
-                .meetingLink(request.getMeetingLink())
-                .scheduledAt(request.getScheduledAt())
-                .createdAt(request.getCreatedAt())
+    public MessageResponse toMessageResponse(Message message) {
+        if (message == null) return null;
+        return MessageResponse.builder()
+                .id(message.getId())
+                .senderId(message.getSender().getId())
+                .senderName(message.getSender().getName())
+                .receiverId(message.getReceiver().getId())
+                .receiverName(message.getReceiver().getName())
+                .content(message.getContent())
+                .timestamp(message.getTimestamp())
                 .build();
     }
 }
