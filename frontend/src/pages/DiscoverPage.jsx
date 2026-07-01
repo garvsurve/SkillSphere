@@ -29,9 +29,8 @@ const DiscoverPage = () => {
   const [query, setQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeIntent, setActiveIntent] = useState('All');
-
-  // We mock stats and intents per user for demonstration
   const [enrichedUsers, setEnrichedUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -52,6 +51,8 @@ const DiscoverPage = () => {
         setEnrichedUsers(enriched);
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchUsers();
@@ -128,9 +129,32 @@ const DiscoverPage = () => {
         
         {/* LEFT MAIN CONTENT */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '3rem' }}>
-          {filteredUsers.map((user, index) => {
-            const decorations = ['tape', 'tack', 'clip', null];
-            const decoration = decorations[index % decorations.length];
+          {loading ? (
+            <div style={{ 
+              gridColumn: '1 / -1', 
+              textAlign: 'center', 
+              padding: '4rem', 
+              fontSize: '1.8rem', 
+              fontFamily: "'Kalam', cursive", 
+              opacity: 0.7 
+            }}>
+              Loading developers... ✍️
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div style={{ 
+              gridColumn: '1 / -1', 
+              textAlign: 'center', 
+              padding: '4rem', 
+              fontSize: '1.8rem', 
+              fontFamily: "'Kalam', cursive", 
+              opacity: 0.7 
+            }}>
+              No developers found matching your search.
+            </div>
+          ) : (
+            filteredUsers.map((user, index) => {
+              const decorations = ['tape', 'tack', 'clip', null];
+              const decoration = decorations[index % decorations.length];
             
             return (
               <SketchCard 
@@ -211,7 +235,7 @@ const DiscoverPage = () => {
                 </SketchButton>
               </SketchCard>
             );
-          })}
+          }))}
         </div>
 
         {/* RIGHT SIDEBAR */}

@@ -43,10 +43,15 @@ const FeedPage = ({ user }) => {
   const [activeTab, setActiveTab] = useState('All Posts');
   const [myFollowingIds, setMyFollowingIds] = useState([]);
   const [allUsersData, setAllUsersData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchFeed();
-    fetchUsers();
+    const init = async () => {
+      setLoading(true);
+      await Promise.all([fetchFeed(), fetchUsers()]);
+      setLoading(false);
+    };
+    init();
   }, []);
 
   const fetchFeed = async () => {
@@ -352,28 +357,34 @@ const FeedPage = ({ user }) => {
 
         {/* Feed Stream */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-
-          {/* People You Follow (Only visible on Following tab) */}
-          {activeTab === 'Following' && myFollowingIds.length > 0 && (
-            <div style={{ marginBottom: '1.5rem', borderBottom: '2px dashed var(--muted-color)', paddingBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.3rem', marginBottom: '1rem', fontFamily: "'Patrick Hand', cursive", color: 'var(--text-muted)' }}>People You Follow</h3>
-              <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-                {allUsersData.filter(u => myFollowingIds.includes(u.id)).map(u => (
-                  <div key={u.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
-                    <img src={`/avatars/${u.avatarId || 'avatar1'}.svg`} alt={u.name} title={u.name} style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid var(--fg-color)' }} />
-                    <span style={{ fontSize: '0.9rem', marginTop: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px', fontWeight: 'bold' }}>{u.name.split(' ')[0]}</span>
-                  </div>
-                ))}
-              </div>
+          
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '4rem', fontSize: '1.8rem', fontFamily: "'Kalam', cursive", opacity: 0.7 }}>
+              Loading the latest updates... ✍️
             </div>
-          )}
+          ) : (
+            <>
+              {/* People You Follow (Only visible on Following tab) */}
+              {activeTab === 'Following' && myFollowingIds.length > 0 && (
+                <div style={{ marginBottom: '1.5rem', borderBottom: '2px dashed var(--muted-color)', paddingBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1.3rem', marginBottom: '1rem', fontFamily: "'Patrick Hand', cursive", color: 'var(--text-muted)' }}>People You Follow</h3>
+                  <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                    {allUsersData.filter(u => myFollowingIds.includes(u.id)).map(u => (
+                      <div key={u.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
+                        <img src={`/avatars/${u.avatarId || 'avatar1'}.svg`} alt={u.name} title={u.name} style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid var(--fg-color)' }} />
+                        <span style={{ fontSize: '0.9rem', marginTop: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px', fontWeight: 'bold' }}>{u.name.split(' ')[0]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {posts.filter(p => {
-            if (activeTab === 'All Posts') return true;
-            if (activeTab === 'My Posts') return p.authorId === user?.userId;
-            if (activeTab === 'Following') return myFollowingIds.includes(p.authorId);
-            return true;
-          }).map((post, index) => {
+              {posts.filter(p => {
+                if (activeTab === 'All Posts') return true;
+                if (activeTab === 'My Posts') return p.authorId === user?.userId;
+                if (activeTab === 'Following') return myFollowingIds.includes(p.authorId);
+                return true;
+              }).map((post, index) => {
             const decorations = ['tape', 'tack', 'clip', null];
             const decoration = decorations[index % decorations.length];
             const { text, tags } = extractTags(post.content);
@@ -518,6 +529,8 @@ const FeedPage = ({ user }) => {
               </SketchCard>
             );
           })}
+            </>
+          )}
         </div>
       </div>
 
