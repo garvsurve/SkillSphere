@@ -136,18 +136,46 @@ const FeedPage = ({ user }) => {
     const content = parentCommentId ? replyInputs[parentCommentId] : commentInputs[postId];
     if (!content?.trim()) return;
 
-    try {
-      await postsApi.addComment(postId, { content, parentCommentId });
-      if (parentCommentId) {
-        setReplyInputs({ ...replyInputs, [parentCommentId]: '' });
-        setActiveReplyId(null);
-      } else {
-        setCommentInputs({ ...commentInputs, [postId]: '' });
+    // 1. Optimistic UI: Increment the comment count instantly
+    setPosts(prevPosts => prevPosts.map(post => {
+      if (post.id === postId) {
+        return { ...post, commentCount: post.commentCount + 1 };
       }
+      return post;
+    }));
+
+    // 2. Clear the input boxes instantly
+    if (parentCommentId) {
+      setReplyInputs({ ...replyInputs, [parentCommentId]: '' });
+      setActiveReplyId(null);
+    } else {
+      setCommentInputs({ ...commentInputs, [postId]: '' });
+      
+      // 3. Inject a temporary comment into the UI instantly so they see it right away
+      const tempComment = {
+        id: 'temp-' + Date.now(),
+        content: content,
+        authorName: user?.name || 'You',
+        authorAvatarId: user?.avatarId || 'avatar1',
+        createdAt: new Date().toISOString(),
+        replies: []
+      };
+      setCommentsData(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), tempComment]
+      }));
+    }
+
+    try {
+      // 4. Send the request to the database in the background
+      await postsApi.addComment(postId, { content, parentCommentId });
+      
+      // 5. Fetch the real comments to silently replace the temporary one
       fetchComments(postId);
-      fetchFeed();
+      // Notice we are NO LONGER calling fetchFeed() here, which removes the 30s delay!
     } catch (err) {
       alert('Failed to add comment. Remember to login again if your session expired!');
+      fetchFeed(); // Revert on failure
     }
   };
 
