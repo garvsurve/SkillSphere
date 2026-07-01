@@ -209,5 +209,29 @@ h1, h2, h3, h4, .font-heading {
   display: inline-block;
   background: var(--card-bg);
   box-shadow: 3px 3px 0px var(--shadow-color);
-  color: var(--fg-color);
+}
+
+@keyframes sketch-pulse {
+  0% { transform: scale(1) rotate(-2deg); opacity: 0.6; }
+  50% { transform: scale(1.1) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-2deg); opacity: 0.6; }
+}
+
+.loading-sketch {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem;
+  gap: 1.5rem;
+}
+
+.loading-circle {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--fg-color);
+  border-radius: var(--wobbly);
+  background: var(--card-bg);
+  animation: sketch-pulse 1s infinite ease-in-out;
 }

@@ -130,15 +130,8 @@ const DiscoverPage = () => {
         {/* LEFT MAIN CONTENT */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '3rem' }}>
           {loading ? (
-            <div style={{ 
-              gridColumn: '1 / -1', 
-              textAlign: 'center', 
-              padding: '4rem', 
-              fontSize: '1.8rem', 
-              fontFamily: "'Kalam', cursive", 
-              opacity: 0.7 
-            }}>
-              Loading developers... ✍️
+            <div className="loading-sketch">
+              <div className="loading-circle"></div>
             </div>
           ) : filteredUsers.length === 0 ? (
             <div style={{ 

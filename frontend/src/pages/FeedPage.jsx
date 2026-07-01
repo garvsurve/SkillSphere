@@ -359,8 +359,8 @@ const FeedPage = ({ user }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
           
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '4rem', fontSize: '1.8rem', fontFamily: "'Kalam', cursive", opacity: 0.7 }}>
-              Loading the latest updates... ✍️
+            <div className="loading-sketch">
+              <div className="loading-circle"></div>
             </div>
           ) : (
             <>
