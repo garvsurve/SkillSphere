@@ -109,11 +109,26 @@ const FeedPage = ({ user }) => {
   };
 
   const handleReact = async (postId, type) => {
+    // Optimistic UI Update: instantly update the local state so the button feels lightning fast
+    setPosts(prevPosts => prevPosts.map(post => {
+      if (post.id === postId) {
+        const isCurrentlyLiked = post.myReaction === 'LIKE';
+        return {
+          ...post,
+          myReaction: isCurrentlyLiked ? null : 'LIKE',
+          likeCount: isCurrentlyLiked ? post.likeCount - 1 : post.likeCount + 1
+        };
+      }
+      return post;
+    }));
+
     try {
+      // Send the request to the backend silently in the background
       await postsApi.react(postId, type);
-      fetchFeed();
     } catch (err) {
       console.error('Reaction failed:', err);
+      // If it fails, revert the feed to the source of truth
+      fetchFeed();
     }
   };
 
