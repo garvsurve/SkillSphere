@@ -21,6 +21,11 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        if (userRepository.count() > 0) {
+            System.out.println("✅ Database already seeded. Skipping...");
+            return;
+        }
+        
         System.out.println("🌱 SEEDING DATABASE WITH NEW DATA...");
 
         User u1 = User.builder()
