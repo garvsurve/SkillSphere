@@ -161,10 +161,21 @@ const LoginPage = ({ setUser }) => {
   const [avatarId, setAvatarId] = useState('avatar1');
   const [techStack, setTechStack] = useState([]);
   
+  const [isLoading, setIsLoading] = useState(false);
+  const [showWakeMessage, setShowWakeMessage] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setShowWakeMessage(false);
+    
+    // If request takes more than 2 seconds, assume db is waking up
+    const wakeTimer = setTimeout(() => {
+      setShowWakeMessage(true);
+    }, 2000);
+
     try {
       if (isLogin) {
         const res = await authApi.login({ email, password });
@@ -183,6 +194,10 @@ const LoginPage = ({ setUser }) => {
       }
     } catch (err) {
       alert('Oops: ' + (err.response?.data?.message || 'Bad luck!'));
+    } finally {
+      clearTimeout(wakeTimer);
+      setIsLoading(false);
+      setShowWakeMessage(false);
     }
   };
 
@@ -245,9 +260,15 @@ const LoginPage = ({ setUser }) => {
             </>
           )}
 
-          <SketchButton type="submit" style={{ width: '100%', background: 'var(--fg-color)', color: 'var(--bg-color)', justifyContent: 'center' }}>
-            {isLogin ? 'Let\'s go' : 'Create account'} <Fingerprint size={20} />
+          <SketchButton type="submit" disabled={isLoading} style={{ width: '100%', background: 'var(--fg-color)', color: 'var(--bg-color)', justifyContent: 'center', opacity: isLoading ? 0.7 : 1 }}>
+            {isLoading ? 'Processing...' : (isLogin ? 'Let\'s go' : 'Create account')} {!isLoading && <Fingerprint size={20} />}
           </SketchButton>
+          
+          {showWakeMessage && (
+            <p style={{ textAlign: 'center', color: '#ff4d4d', marginTop: '0.5rem', fontWeight: 'bold' }}>
+              Waking up the database, this might take a minute... ☕
+            </p>
+          )}
         </form>
         
         <div style={{ marginTop: '2rem', textAlign: 'center', position: 'relative' }}>
