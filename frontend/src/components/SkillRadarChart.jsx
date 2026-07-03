@@ -51,7 +51,7 @@ const SkillRadarChart = ({ userId, isOwner }) => {
             Connect your GitHub account to automatically verify your coding skills!
           </p>
           <a
-            href={`https://github.com/login/oauth/authorize?client_id=${import.meta.env.VITE_GITHUB_CLIENT_ID || 'your_github_client_id_here'}`} 
+            href={`https://github.com/login/oauth/authorize?client_id=${import.meta.env.VITE_GITHUB_CLIENT_ID || 'your_github_client_id_here'}&scope=repo`} 
             className="sketch-button"
             style={{ textDecoration: 'none', zIndex: 10, display: 'inline-block', marginTop: '1rem' }}
           >

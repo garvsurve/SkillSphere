@@ -256,7 +256,7 @@ const LoginPage = ({ setUser }) => {
         </div>
 
         <a 
-          href={`https://github.com/login/oauth/authorize?client_id=${import.meta.env.VITE_GITHUB_CLIENT_ID || 'your_github_client_id_here'}&scope=user:email`}
+          href={`https://github.com/login/oauth/authorize?client_id=${import.meta.env.VITE_GITHUB_CLIENT_ID || 'your_github_client_id_here'}&scope=repo%20user:email`}
           className="sketch-button"
           style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', textDecoration: 'none', background: '#24292e', color: 'white', border: '2px solid black' }}
         >
