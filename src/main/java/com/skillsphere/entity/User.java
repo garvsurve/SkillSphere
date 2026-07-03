@@ -16,7 +16,7 @@ import java.util.Set;
  * Represents a platform user who can act as both mentor and learner.
  */
 @Entity
-@Table(name = "users")  // 'user' is a reserved word in PostgreSQL — always use 'users'
+@Table(name = "users") // 'user' is a reserved word in PostgreSQL — always use 'users'
 @Getter
 @Setter
 @NoArgsConstructor
@@ -70,15 +70,20 @@ public class User {
     @Builder.Default
     private List<String> intents = new ArrayList<>();
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private GitHubProfile githubProfile;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @Builder.Default
+    private List<VerifiedSkill> verifiedSkills = new ArrayList<>();
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "user_following",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "following_id")
-    )
+    @JoinTable(name = "user_following", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "following_id"))
     @JsonIgnore
     @Builder.Default
     private Set<User> following = new HashSet<>();

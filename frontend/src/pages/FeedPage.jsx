@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Send, MessageSquare, Handshake, Heart, Bookmark, Share2, Link as LinkIcon, Users, Hash } from 'lucide-react';
-import { postsApi, sessionRequestsApi, usersApi } from '../api';
+import { Send, MessageSquare, Handshake, Heart, Bookmark, Share2, Link as LinkIcon, Users, Hash, Wand2 } from 'lucide-react';
+import { postsApi, sessionRequestsApi, usersApi, aiApi } from '../api';
 import { SketchCard, SketchButton } from '../components/Sketch';
 import TechStackBadge from '../components/TechStackBadge';
 import SessionRequestModal from '../components/SessionRequestModal';
@@ -44,6 +44,7 @@ const FeedPage = ({ user }) => {
   const [myFollowingIds, setMyFollowingIds] = useState([]);
   const [allUsersData, setAllUsersData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isEnhancing, setIsEnhancing] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -74,6 +75,19 @@ const FeedPage = ({ user }) => {
       setAllUsersData(allUsers);
       setSuggestedUsers(allUsers.slice(0, 3));
       setWhoToFollow(allUsers.slice(3, 6));
+
+      // Fetch AI Matches in background
+      aiApi.getMatches().then(aiRes => {
+        const matches = aiRes.data; // Array of { id, reason }
+        const aiSuggested = matches.map(m => {
+          const u = allUsers.find(u => u.id === m.id);
+          return u ? { ...u, aiReason: m.reason } : null;
+        }).filter(Boolean);
+        if (aiSuggested.length > 0) {
+          setSuggestedUsers(aiSuggested);
+        }
+      }).catch(err => console.error("AI Matchmaker failed", err));
+
     } catch (err) {
       console.error(err);
     }
@@ -106,6 +120,21 @@ const FeedPage = ({ user }) => {
       if (trimmed.includes(tag)) return prev;
       return trimmed ? `${trimmed}\n\n${tag}` : tag;
     });
+  };
+
+  const handleEnhancePost = async () => {
+    if (!newPostContent.trim()) return;
+    setIsEnhancing(true);
+    try {
+      const res = await aiApi.enhance(newPostContent);
+      if (res.data && res.data.text) {
+        setNewPostContent(res.data.text);
+      }
+    } catch (err) {
+      alert('Failed to enhance post: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsEnhancing(false);
+    }
   };
 
   const handleReact = async (postId, type) => {
@@ -150,7 +179,7 @@ const FeedPage = ({ user }) => {
       setActiveReplyId(null);
     } else {
       setCommentInputs({ ...commentInputs, [postId]: '' });
-      
+
       // 3. Inject a temporary comment into the UI instantly so they see it right away
       const tempComment = {
         id: 'temp-' + Date.now(),
@@ -169,7 +198,7 @@ const FeedPage = ({ user }) => {
     try {
       // 4. Send the request to the database in the background
       await postsApi.addComment(postId, { content, parentCommentId });
-      
+
       // 5. Fetch the real comments to silently replace the temporary one
       fetchComments(postId);
       // Notice we are NO LONGER calling fetchFeed() here, which removes the 30s delay!
@@ -390,8 +419,17 @@ const FeedPage = ({ user }) => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-              <SketchButton primary type="submit" disabled={!newPostContent.trim()} style={{ fontSize: '1.2rem', padding: '0.6rem 2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem', gap: '1rem' }}>
+              <SketchButton
+                type="button"
+                secondary
+                disabled={!newPostContent.trim() || isEnhancing}
+                onClick={handleEnhancePost}
+                style={{ fontSize: '1.2rem', padding: '0.6rem 1.5rem', background: '#e0f7fa' }}
+              >
+                <Wand2 size={18} /> {isEnhancing ? 'Enhancing...' : 'Enhance'}
+              </SketchButton>
+              <SketchButton primary type="submit" disabled={!newPostContent.trim() || isEnhancing} style={{ fontSize: '1.2rem', padding: '0.6rem 2rem' }}>
                 <Send size={18} /> Post
               </SketchButton>
             </div>
@@ -400,7 +438,7 @@ const FeedPage = ({ user }) => {
 
         {/* Feed Stream */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-          
+
           {loading ? (
             <div className="loading-sketch">
               <div className="loading-circle"></div>
@@ -428,150 +466,150 @@ const FeedPage = ({ user }) => {
                 if (activeTab === 'Following') return myFollowingIds.includes(p.authorId);
                 return true;
               }).map((post, index) => {
-            const decorations = ['tape', 'tack', 'clip', null];
-            const decoration = decorations[index % decorations.length];
-            const { text, tags } = extractTags(post.content);
+                const decorations = ['tape', 'tack', 'clip', null];
+                const decoration = decorations[index % decorations.length];
+                const { text, tags } = extractTags(post.content);
 
-            return (
-              <SketchCard key={post.id} decoration={decoration} style={{ transform: `rotate(${index % 2 === 0 ? -0.5 : 0.8}deg)` }}>
+                return (
+                  <SketchCard key={post.id} decoration={decoration} style={{ transform: `rotate(${index % 2 === 0 ? -0.5 : 0.8}deg)` }}>
 
-                {/* Post Header */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
-                  <img
-                    src={`/avatars/${post.authorAvatarId || 'avatar1'}.svg`}
-                    alt={post.authorName}
-                    style={{ width: '65px', height: '65px', borderRadius: '50%', border: '3px solid var(--fg-color)', background: '#fff' }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{post.authorName}</h3>
-                          {post.authorId !== user?.userId && (
-                            <button
-                              onClick={() => handleFollow(post.authorId)}
-                              style={{
-                                background: 'var(--card-bg)',
-                                border: '2px solid var(--muted-color)',
-                                borderRadius: '15px',
-                                padding: '0.1rem 0.5rem',
-                                fontSize: '0.8rem',
-                                cursor: 'pointer',
-                                fontFamily: "'Patrick Hand', cursive"
-                              }}
-                            >
-                              {myFollowingIds.includes(post.authorId) ? 'Following' : 'Follow'}
-                            </button>
-                          )}
+                    {/* Post Header */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
+                      <img
+                        src={`/avatars/${post.authorAvatarId || 'avatar1'}.svg`}
+                        alt={post.authorName}
+                        style={{ width: '65px', height: '65px', borderRadius: '50%', border: '3px solid var(--fg-color)', background: '#fff' }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{post.authorName}</h3>
+                              {post.authorId !== user?.userId && (
+                                <button
+                                  onClick={() => handleFollow(post.authorId)}
+                                  style={{
+                                    background: 'var(--card-bg)',
+                                    border: '2px solid var(--muted-color)',
+                                    borderRadius: '15px',
+                                    padding: '0.1rem 0.5rem',
+                                    fontSize: '0.8rem',
+                                    cursor: 'pointer',
+                                    fontFamily: "'Patrick Hand', cursive"
+                                  }}
+                                >
+                                  {myFollowingIds.includes(post.authorId) ? 'Following' : 'Follow'}
+                                </button>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '1rem', opacity: 0.7 }}>Developer • {post.authorTechStack?.[0] || 'Learning'}</div>
+                          </div>
+                          <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontFamily: "'Kalam', cursive" }}>
+                            {new Date(post.createdAt).toLocaleDateString()}
+                          </div>
                         </div>
-                        <div style={{ fontSize: '1rem', opacity: 0.7 }}>Developer • {post.authorTechStack?.[0] || 'Learning'}</div>
-                      </div>
-                      <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontFamily: "'Kalam', cursive" }}>
-                        {new Date(post.createdAt).toLocaleDateString()}
+
+                        {/* Skill Tags */}
+                        {post.authorTechStack && post.authorTechStack.length > 0 && (
+                          <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                            {post.authorTechStack.slice(0, 3).map(tech => (
+                              <TechStackBadge key={tech} text={tech} />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Skill Tags */}
-                    {post.authorTechStack && post.authorTechStack.length > 0 && (
-                      <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                        {post.authorTechStack.slice(0, 3).map(tech => (
-                          <TechStackBadge key={tech} text={tech} />
-                        ))}
+                    {/* Post Content */}
+                    <p style={{ fontSize: '1.3rem', whiteSpace: 'pre-wrap', marginBottom: '1.5rem', lineHeight: '1.6', background: 'var(--muted-color)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--accent-color)' }}>
+                      {text}
+                    </p>
+
+                    {/* Intent Badges from Tags */}
+                    {tags.length > 0 && (
+                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                        {tags.map(tag => {
+                          const postType = POST_TYPES.find(pt => pt.tag === tag);
+                          return (
+                            <span key={tag} style={{
+                              background: postType ? postType.color : 'var(--muted-color)',
+                              color: postType ? '#2d2d2d' : 'var(--fg-color)',
+                              padding: '0.3rem 0.8rem',
+                              borderRadius: '15px',
+                              fontSize: '0.9rem',
+                              border: '1px solid var(--fg-color)',
+                              fontWeight: 'bold',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.3rem'
+                            }}>
+                              {postType ? postType.icon : '🏷️'} {postType ? postType.label : tag}
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* Post Content */}
-                <p style={{ fontSize: '1.3rem', whiteSpace: 'pre-wrap', marginBottom: '1.5rem', lineHeight: '1.6', background: 'var(--muted-color)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid var(--accent-color)' }}>
-                  {text}
-                </p>
-
-                {/* Intent Badges from Tags */}
-                {tags.length > 0 && (
-                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-                    {tags.map(tag => {
-                      const postType = POST_TYPES.find(pt => pt.tag === tag);
-                      return (
-                        <span key={tag} style={{
-                          background: postType ? postType.color : 'var(--muted-color)',
-                          color: postType ? '#2d2d2d' : 'var(--fg-color)',
-                          padding: '0.3rem 0.8rem',
-                          borderRadius: '15px',
-                          fontSize: '0.9rem',
-                          border: '1px solid var(--fg-color)',
-                          fontWeight: 'bold',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.3rem'
-                        }}>
-                          {postType ? postType.icon : '🏷️'} {postType ? postType.label : tag}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Interaction Bar */}
-                <div style={{ display: 'flex', gap: '1rem', borderTop: '2px dashed var(--muted-color)', paddingTop: '1rem' }}>
-                  <SketchButton
-                    style={{
-                      flex: 1, justifyContent: 'center', padding: '0.5rem',
-                      background: post.myReaction === 'LIKE' ? '#ffaaa5' : 'transparent',
-                      color: post.myReaction === 'LIKE' ? 'var(--bg-color)' : 'var(--fg-color)',
-                      border: post.myReaction === 'LIKE' ? '2px solid var(--fg-color)' : '2px dashed var(--muted-color)'
-                    }}
-                    onClick={() => handleReact(post.id, 'LIKE')}
-                  >
-                    <Heart size={20} fill={post.myReaction === 'LIKE' ? 'currentColor' : 'none'} /> Appreciate
-                  </SketchButton>
-
-                  <SketchButton
-                    style={{ flex: 1, justifyContent: 'center', padding: '0.5rem', border: '2px dashed var(--muted-color)' }}
-                    onClick={() => toggleComments(post.id)}
-                  >
-                    <MessageSquare size={20} /> Discuss
-                  </SketchButton>
-
-                  <SketchButton
-                    style={{ flex: 1, justifyContent: 'center', padding: '0.5rem', border: '2px dashed var(--muted-color)' }}
-                    onClick={() => setActiveModalPostId(post.id)}
-                  >
-                    <Handshake size={20} /> Request Session
-                  </SketchButton>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.8rem', fontSize: '0.9rem', color: 'var(--text-muted)', padding: '0 0.5rem' }}>
-                  <span><strong>{post.likeCount}</strong> Appreciations</span>
-                  <span><strong>{post.commentCount}</strong> Discussions</span>
-                </div>
-
-                {/* Comments Section */}
-                {expandedComments[post.id] && (
-                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
-                    <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2rem' }}>
-                      <img src={`/avatars/${user?.avatarId || 'avatar1'}.svg`} alt="Avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--fg-color)' }} />
-                      <input
-                        className="sketch-input"
-                        placeholder="Share your thoughts..."
-                        style={{ flex: 1, padding: '0.6rem 1rem', borderRadius: '25px', fontSize: '1.1rem' }}
-                        value={commentInputs[post.id] || ''}
-                        onChange={e => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') handleCommentSubmit(post.id);
+                    {/* Interaction Bar */}
+                    <div style={{ display: 'flex', gap: '1rem', borderTop: '2px dashed var(--muted-color)', paddingTop: '1rem' }}>
+                      <SketchButton
+                        style={{
+                          flex: 1, justifyContent: 'center', padding: '0.5rem',
+                          background: post.myReaction === 'LIKE' ? '#ffaaa5' : 'transparent',
+                          color: post.myReaction === 'LIKE' ? 'var(--bg-color)' : 'var(--fg-color)',
+                          border: post.myReaction === 'LIKE' ? '2px solid var(--fg-color)' : '2px dashed var(--muted-color)'
                         }}
-                      />
+                        onClick={() => handleReact(post.id, 'LIKE')}
+                      >
+                        <Heart size={20} fill={post.myReaction === 'LIKE' ? 'currentColor' : 'none'} /> Appreciate
+                      </SketchButton>
+
+                      <SketchButton
+                        style={{ flex: 1, justifyContent: 'center', padding: '0.5rem', border: '2px dashed var(--muted-color)' }}
+                        onClick={() => toggleComments(post.id)}
+                      >
+                        <MessageSquare size={20} /> Discuss
+                      </SketchButton>
+
+                      <SketchButton
+                        style={{ flex: 1, justifyContent: 'center', padding: '0.5rem', border: '2px dashed var(--muted-color)' }}
+                        onClick={() => setActiveModalPostId(post.id)}
+                      >
+                        <Handshake size={20} /> Request Session
+                      </SketchButton>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {commentsData[post.id]?.map(comment => renderCommentNode(comment, post.id))}
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.8rem', fontSize: '0.9rem', color: 'var(--text-muted)', padding: '0 0.5rem' }}>
+                      <span><strong>{post.likeCount}</strong> Appreciations</span>
+                      <span><strong>{post.commentCount}</strong> Discussions</span>
                     </div>
-                  </div>
-                )}
 
-              </SketchCard>
-            );
-          })}
+                    {/* Comments Section */}
+                    {expandedComments[post.id] && (
+                      <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
+                        <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2rem' }}>
+                          <img src={`/avatars/${user?.avatarId || 'avatar1'}.svg`} alt="Avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', border: '2px solid var(--fg-color)' }} />
+                          <input
+                            className="sketch-input"
+                            placeholder="Share your thoughts..."
+                            style={{ flex: 1, padding: '0.6rem 1rem', borderRadius: '25px', fontSize: '1.1rem' }}
+                            value={commentInputs[post.id] || ''}
+                            onChange={e => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') handleCommentSubmit(post.id);
+                            }}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          {commentsData[post.id]?.map(comment => renderCommentNode(comment, post.id))}
+                        </div>
+                      </div>
+                    )}
+
+                  </SketchCard>
+                );
+              })}
             </>
           )}
         </div>
@@ -628,21 +666,36 @@ const FeedPage = ({ user }) => {
 
         {/* Suggested Connections */}
         <SketchCard decoration="tack" style={{ transform: 'rotate(-1deg)' }}>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}><Users size={20} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Suggested Connections</h3>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}><Users size={20} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> AI Matchmaker ✨</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {suggestedUsers.map(u => (
-              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <img src={`/avatars/${u.avatarId || 'avatar1'}.svg`} alt="Avatar" style={{ width: '45px', height: '45px', borderRadius: '50%', border: '2px solid var(--fg-color)' }} />
-                <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '1.1rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.name}</div>
-                  <div style={{ fontSize: '0.85rem', opacity: 0.7, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.company || 'Indie Developer'}</div>
+              <div key={u.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingBottom: '1rem', borderBottom: '1px dashed var(--muted-color)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <img src={`/avatars/${u.avatarId || 'avatar1'}.svg`} alt="Avatar" style={{ width: '45px', height: '45px', borderRadius: '50%', border: '2px solid var(--fg-color)' }} />
+                  <div style={{ flex: 1, overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '1.1rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.name}</div>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.7, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{u.company || 'Indie Developer'}</div>
+                  </div>
+                  <SketchButton
+                    onClick={() => handleFollow(u.id)}
+                    style={{ padding: '0.2rem 0.5rem', fontSize: '0.9rem' }}
+                  >
+                    {myFollowingIds.includes(u.id) ? 'Following' : 'Follow'}
+                  </SketchButton>
                 </div>
-                <SketchButton
-                  onClick={() => handleFollow(u.id)}
-                  style={{ padding: '0.2rem 0.5rem', fontSize: '0.9rem' }}
-                >
-                  {myFollowingIds.includes(u.id) ? 'Following' : 'Follow'}
-                </SketchButton>
+                {u.aiReason && (
+                  <div style={{ 
+                    fontSize: '0.9rem', 
+                    fontStyle: 'italic', 
+                    background: 'rgba(255, 77, 77, 0.1)', 
+                    padding: '0.5rem 0.8rem', 
+                    borderRadius: '8px', 
+                    borderLeft: '3px solid #ff4d4d',
+                    marginTop: '0.2rem'
+                  }}>
+                    "{u.aiReason}"
+                  </div>
+                )}
               </div>
             ))}
           </div>

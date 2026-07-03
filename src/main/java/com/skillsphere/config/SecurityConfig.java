@@ -54,7 +54,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                     auth.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users", "/api/users/**").permitAll()
                         .requestMatchers("/api/posts/feed").permitAll()           // public feed read
                         .requestMatchers("/api/posts/*/comments").permitAll()     // public comment read
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

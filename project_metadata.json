@@ -1,0 +1,36 @@
+{
+  "name": "SkillSphere",
+  "description": "Peer-to-peer skill exchange platform",
+  "version": "0.0.1-SNAPSHOT",
+  "repository": {
+    "type": "git"
+  },
+  "architecture": {
+    "backend": {
+      "language": "Java 21",
+      "framework": "Spring Boot 3.2.4",
+      "data_access": "Spring Data JPA",
+      "security": "Spring Security, JWT",
+      "database": "PostgreSQL",
+      "build_tool": "Maven"
+    },
+    "frontend": {
+      "framework": "React 18",
+      "build_tool": "Vite",
+      "styling": "Vanilla CSS",
+      "icons": "Lucide Icons"
+    }
+  },
+  "features": [
+    "The Notebook Feed",
+    "Intent-Based Discovery",
+    "Follow & Network",
+    "Real-time Messaging & Sessions"
+  ],
+  "configuration": {
+    "backend_port": 8085,
+    "frontend_port": 5173,
+    "database_port": 2004,
+    "database_name": "SkillSphere"
+  }
+}

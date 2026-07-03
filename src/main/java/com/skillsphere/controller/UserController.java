@@ -54,7 +54,16 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest req) {
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable Long id, 
+            @Valid @RequestBody UserUpdateRequest req,
+            @AuthenticationPrincipal UserDetails userDetails) {
+            
+        User currentUser = userService.getUserByEmail(userDetails.getUsername());
+        if (!currentUser.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         User userUpdate = User.builder()
                 .name(req.getName())
                 .bio(req.getBio())
@@ -68,7 +77,15 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+            
+        User currentUser = userService.getUserByEmail(userDetails.getUsername());
+        if (!currentUser.getId().equals(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }

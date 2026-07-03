@@ -22,6 +22,7 @@ public class SessionRequestService {
     private final SessionRequestRepository sessionRequestRepository;
     private final PostService postService;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     private static final int MAX_WORDS = 100;
 
@@ -64,7 +65,9 @@ public class SessionRequestService {
                 .status(SessionRequestStatus.PENDING)
                 .build();
 
-        return toResponse(sessionRequestRepository.save(request));
+        SessionRequest saved = sessionRequestRepository.save(request);
+        notificationService.sendNotification(toUser, fromUser.getName() + " sent you a session request!");
+        return toResponse(saved);
     }
 
     @Transactional(readOnly = true)

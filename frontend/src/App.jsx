@@ -8,8 +8,8 @@ import {
   Navigate,
   useLocation
 } from 'react-router-dom';
-import { Search, LogOut, ArrowRight, Fingerprint, Home, LayoutDashboard, Sun, Moon } from 'lucide-react';
-import api, { authApi, usersApi, sessionRequestsApi } from './api';
+import { Search, LogOut, ArrowRight, Fingerprint, Home, LayoutDashboard, Sun, Moon, Bell } from 'lucide-react';
+import api, { authApi, usersApi, sessionRequestsApi, notificationsApi } from './api';
 import OnboardingPage from './pages/OnboardingPage';
 import FeedPage from './pages/FeedPage';
 import DashboardPage from './pages/DashboardPage';
@@ -18,11 +18,44 @@ import TagInput from './components/TagInput';
 
 import { SketchButton, SketchCard } from './components/Sketch';
 import DiscoverPage from './pages/DiscoverPage';
+import GitHubCallback from './pages/GitHubCallback';
 
 // --- LAYOUT COMPONENTS ---
 
 const Navbar = ({ user, onLogout, isDarkMode, toggleTheme }) => {
   const location = useLocation();
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    
+    // Initial fetch of unread notifications
+    notificationsApi.getUnread().then(res => setNotifications(res.data)).catch(console.error);
+
+    // Setup SSE connection
+    const token = localStorage.getItem('token');
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8085/api';
+    const sse = new EventSource(`${baseUrl}/notifications/stream?token=${token}`);
+    
+    sse.addEventListener('notification', (e) => {
+      const newNotif = JSON.parse(e.data);
+      setNotifications(prev => [newNotif, ...prev]);
+    });
+
+    return () => sse.close();
+  }, [user]);
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const markAsRead = async (id) => {
+    try {
+      await notificationsApi.markAsRead(id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const getLinkStyle = (path) => ({
     textDecoration: 'none',
     color: 'inherit',
@@ -46,6 +79,61 @@ const Navbar = ({ user, onLogout, isDarkMode, toggleTheme }) => {
         {user ? (
           <>
             <Link to="/feed" className="font-heading" style={{ ...getLinkStyle('/feed') }}><Home size={18}/> Feed</Link>
+            
+            {/* Notification Bell */}
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--fg-color)', position: 'relative', marginTop: '5px' }}
+              >
+                <Bell size={22} />
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '-5px', right: '-8px',
+                    background: '#ff4d4d', color: 'white', borderRadius: '50%',
+                    width: '18px', height: '18px', fontSize: '0.75rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 'bold'
+                  }}>
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              
+              {showNotifications && (
+                <div style={{
+                  position: 'absolute', top: '100%', right: '0', marginTop: '10px',
+                  background: 'var(--card-bg)', border: '2px solid var(--border-color)',
+                  borderRadius: '12px', width: '300px', padding: '1rem',
+                  boxShadow: '4px 4px 0 var(--border-color)', zIndex: 1000
+                }}>
+                  <h4 style={{ margin: '0 0 1rem 0', fontFamily: "'Patrick Hand', cursive", fontSize: '1.2rem' }}>Notifications</h4>
+                  {notifications.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>All caught up!</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '300px', overflowY: 'auto' }}>
+                      {notifications.map(n => (
+                        <div key={n.id} style={{ 
+                          padding: '0.8rem', background: 'var(--bg-color)', 
+                          borderRadius: '8px', fontSize: '0.9rem',
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                          border: '1px solid var(--border-color)'
+                        }}>
+                          <span style={{ flex: 1 }}>{n.message}</span>
+                          <button 
+                            onClick={() => markAsRead(n.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ff4d4d', fontSize: '1.2rem', padding: '0 0 0 0.5rem' }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <Link to="/dashboard" className="font-heading" style={{ ...getLinkStyle('/dashboard') }}><LayoutDashboard size={18}/> Dashboard</Link>
             <SketchButton onClick={onLogout} style={{ padding: '0.4rem 1rem', fontSize: '1.1rem' }}>
             <LogOut size={16} /> bye
@@ -161,6 +249,20 @@ const LoginPage = ({ setUser }) => {
             {isLogin ? 'Let\'s go' : 'Create account'} <Fingerprint size={20} />
           </SketchButton>
         </form>
+        
+        <div style={{ marginTop: '2rem', textAlign: 'center', position: 'relative' }}>
+          <hr style={{ borderTop: '2px dashed var(--muted-color)', borderBottom: 'none' }} />
+          <span style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'var(--card-bg)', padding: '0 1rem', fontFamily: "'Kalam', cursive" }}>or</span>
+        </div>
+
+        <a 
+          href={`https://github.com/login/oauth/authorize?client_id=${import.meta.env.VITE_GITHUB_CLIENT_ID || 'your_github_client_id_here'}&scope=user:email`}
+          className="sketch-button"
+          style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', textDecoration: 'none', background: '#24292e', color: 'white', border: '2px solid black' }}
+        >
+          Continue with GitHub
+        </a>
+
         <p 
           style={{ marginTop: '2rem', textAlign: 'center', cursor: 'pointer', textDecoration: 'underline' }} 
           onClick={() => setIsLogin(!isLogin)}
@@ -205,6 +307,7 @@ const App = () => {
         <Route path="/onboarding" element={user ? <OnboardingPage user={user} setUser={setUser} /> : <Navigate to="/login" />} />
         <Route path="/feed" element={user ? <FeedPage user={user} /> : <Navigate to="/login" />} />
         <Route path="/dashboard" element={user ? <DashboardPage user={user} setUser={setUser} /> : <Navigate to="/login" />} />
+        <Route path="/oauth/github/callback" element={<GitHubCallback user={user} setUser={setUser} />} />
       </Routes>
     </Router>
   );

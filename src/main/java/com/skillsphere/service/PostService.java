@@ -26,6 +26,7 @@ public class PostService {
     private final PostCommentRepository commentRepository;
     private final PostReactionRepository reactionRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     public PostResponse createPost(String authorEmail, PostCreateRequest req) {
         User author = userService.getUserByEmail(authorEmail);
@@ -82,6 +83,10 @@ public class PostService {
                     .type(type)
                     .build();
             reactionRepository.save(reaction);
+            
+            if (type == ReactionType.LIKE && !post.getAuthor().getId().equals(user.getId())) {
+                notificationService.sendNotification(post.getAuthor(), user.getName() + " appreciated your post!");
+            }
         }
         return toPostResponse(post, userEmail);
     }
@@ -106,6 +111,11 @@ public class PostService {
                 .parentComment(parent)
                 .build();
         PostComment saved = commentRepository.save(comment);
+
+        if (!post.getAuthor().getId().equals(author.getId())) {
+            notificationService.sendNotification(post.getAuthor(), author.getName() + " commented on your post.");
+        }
+
         return toCommentResponse(saved);
     }
 
@@ -141,9 +151,11 @@ public class PostService {
         if (currentUserEmail != null) {
             try {
                 User currentUser = userService.getUserByEmail(currentUserEmail);
-                Optional<PostReaction> myR = reactionRepository.findByPostIdAndUserId(post.getId(), currentUser.getId());
+                Optional<PostReaction> myR = reactionRepository.findByPostIdAndUserId(post.getId(),
+                        currentUser.getId());
                 myReaction = myR.map(r -> r.getType().name()).orElse(null);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         User author = post.getAuthor();

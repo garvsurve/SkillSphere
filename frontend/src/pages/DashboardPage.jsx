@@ -3,6 +3,7 @@ import { Settings, Clock, CheckCircle, XCircle } from 'lucide-react';
 import ProfileEditModal from '../components/ProfileEditModal';
 import TechStackBadge from '../components/TechStackBadge';
 import ChatBox from '../components/ChatBox';
+import SkillRadarChart from '../components/SkillRadarChart';
 import { usersApi, sessionRequestsApi, messagesApi } from '../api';
 
 const DashboardPage = ({ user, setUser }) => {
@@ -209,6 +210,11 @@ const DashboardPage = ({ user, setUser }) => {
                 );
               })}
             </div>
+          </div>
+
+          {/* GitHub Verified Skills */}
+          <div style={{ marginTop: '3rem' }}>
+            <SkillRadarChart userId={user?.id} isOwner={true} />
           </div>
         </div>
       )}

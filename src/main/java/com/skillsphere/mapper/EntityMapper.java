@@ -11,7 +11,8 @@ import java.util.stream.Collectors;
 public class EntityMapper {
 
     public UserResponse toUserResponse(User user) {
-        if (user == null) return null;
+        if (user == null)
+            return null;
         return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
@@ -25,13 +26,15 @@ public class EntityMapper {
                 .intents(user.getIntents() != null ? user.getIntents() : new ArrayList<>())
                 .createdAt(user.getCreatedAt())
                 .followerCount(user.getFollowers() != null ? user.getFollowers().size() : 0)
-                .followingIds(user.getFollowing() != null ? user.getFollowing().stream().map(User::getId).collect(Collectors.toList()) : new ArrayList<>())
+                .followingIds(user.getFollowing() != null
+                        ? user.getFollowing().stream().map(User::getId).collect(Collectors.toList())
+                        : new ArrayList<>())
                 .build();
     }
 
-
     public MessageResponse toMessageResponse(Message message) {
-        if (message == null) return null;
+        if (message == null)
+            return null;
         return MessageResponse.builder()
                 .id(message.getId())
                 .senderId(message.getSender().getId())
