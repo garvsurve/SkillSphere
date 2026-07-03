@@ -23,9 +23,12 @@ const GitHubCallback = ({ user, setUser }) => {
       }
 
       try {
-        if (user) {
+        const localUserStr = localStorage.getItem('user');
+        const activeUser = user || (localUserStr ? JSON.parse(localUserStr) : null);
+
+        if (activeUser && activeUser.id) {
           // Profile Connection Flow
-          await githubApi.connect(user.id, code);
+          await githubApi.connect(activeUser.id, code);
           setStatus('Successfully connected GitHub! Syncing your skills...');
           setTimeout(() => navigate(`/dashboard`), 2000);
         } else {
