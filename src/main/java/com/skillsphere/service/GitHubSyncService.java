@@ -35,7 +35,9 @@ public class GitHubSyncService {
     @Value("${github.client.secret:}")
     private String clientSecret;
 
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient = RestClient.builder()
+            .defaultHeader(HttpHeaders.USER_AGENT, "SkillSphere-App")
+            .build();
 
     @Transactional
     public void connectAccount(Long userId, String oauthCode) {
@@ -123,6 +125,9 @@ public class GitHubSyncService {
                         languageRepoCount.put(lang, languageRepoCount.getOrDefault(lang, 0) + 1);
                     }
                 }
+                
+                // Sleep for 100ms to avoid GitHub's Secondary Rate Limit (Abuse limit) for concurrent requests
+                Thread.sleep(100);
             } catch (Exception e) {
                 // Ignore repo if language fetch fails (e.g., rate limit)
                 System.err.println("Failed to fetch languages for repo: " + languagesUrl);
