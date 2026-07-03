@@ -214,7 +214,7 @@ const DashboardPage = ({ user, setUser }) => {
 
           {/* GitHub Verified Skills */}
           <div style={{ marginTop: '3rem' }}>
-            <SkillRadarChart userId={user?.id} isOwner={true} />
+            <SkillRadarChart userId={user?.userId || user?.id} isOwner={true} />
           </div>
         </div>
       )}
