@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/posts/feed").permitAll()           // public feed read
                         .requestMatchers("/api/posts/*/comments").permitAll()     // public comment read
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/health").permitAll()
                         .anyRequest().authenticated()
                 );
 
