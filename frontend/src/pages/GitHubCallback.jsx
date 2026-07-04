@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { githubApi, authApi } from '../api';
 import { SketchCard } from '../components/Sketch';
-import { Github, Loader2 } from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 
 const GitHubCallback = ({ user, setUser }) => {
   const [status, setStatus] = useState('Connecting to GitHub...');
@@ -74,7 +74,7 @@ const GitHubCallback = ({ user, setUser }) => {
     }}>
       <SketchCard decoration="pin" style={{ maxWidth: '400px', width: '100%', padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-          <Github size={64} style={{ color: isError ? '#ff4d4d' : 'var(--fg-color)' }} />
+          <RefreshCw size={64} style={{ color: isError ? '#ff4d4d' : 'var(--fg-color)' }} />
         </div>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', fontFamily: "'Kalam', cursive" }}>
           GitHub Sync
