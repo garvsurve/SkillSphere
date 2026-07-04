@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { githubApi, authApi } from '../api';
+import { SketchCard } from '../components/Sketch';
+import { Github, Loader2 } from 'lucide-react';
 
 const GitHubCallback = ({ user, setUser }) => {
   const [status, setStatus] = useState('Connecting to GitHub...');
+  const [isError, setIsError] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const hasRun = useRef(false);
@@ -17,6 +20,7 @@ const GitHubCallback = ({ user, setUser }) => {
       const code = searchParams.get('code');
 
       if (!code) {
+        setIsError(true);
         setStatus('Error: No authorization code found.');
         setTimeout(() => navigate(user ? '/profile' : '/login'), 3000);
         return;
@@ -50,6 +54,7 @@ const GitHubCallback = ({ user, setUser }) => {
         }
       } catch (err) {
         console.error('GitHub auth failed', err);
+        setIsError(true);
         setStatus('Failed to authenticate with GitHub.');
         setTimeout(() => navigate(user ? '/dashboard' : '/login'), 3000);
       }
@@ -59,17 +64,37 @@ const GitHubCallback = ({ user, setUser }) => {
   }, [location, navigate, user, setUser]);
 
   return (
-    <div className="min-h-screen pt-24 pb-12 flex items-center justify-center bg-[#f8f9fa] relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.15] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMjBMMjAgME0wIDBMMjAgMjAiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3N2Zz4=')]"></div>
-      
-      <div className="border-4 border-black p-8 rounded-2xl bg-white shadow-offset text-center relative z-10 max-w-md w-full">
-        <h2 className="font-kalam text-3xl font-bold mb-6">GitHub Sync</h2>
-        <p className="font-kalam text-xl mb-4">{status}</p>
+    <div className="container" style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: 'calc(100vh - 100px)',
+      textAlign: 'center'
+    }}>
+      <SketchCard decoration="pin" style={{ maxWidth: '400px', width: '100%', padding: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+          <Github size={64} style={{ color: isError ? '#ff4d4d' : 'var(--fg-color)' }} />
+        </div>
+        <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', fontFamily: "'Kalam', cursive" }}>
+          GitHub Sync
+        </h2>
+        <p style={{ fontSize: '1.2rem', color: 'var(--text-color)', marginBottom: '1.5rem' }}>
+          {status}
+        </p>
         
         {status.includes('Connecting') && (
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mt-4"></div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+            <Loader2 className="spinner" size={40} style={{ animation: 'spin 1s linear infinite', color: 'var(--fg-color)' }} />
+          </div>
         )}
-      </div>
+      </SketchCard>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
